@@ -5,135 +5,116 @@ import sys
 from sys import stdin
 
 lexer = ox.make_lexer([
-    ('NAME', r'[-a-zA-Z]+'),
+    ('RIGHT', r'right'), # > in brainfuck
+    ('LEFT', r'left'), # < in brainfuck
+    ('INC', r'inc'), # + in brainfuck
+    ('DEC', r'dec'), # - in brainfuck
+    ('PRINT', r'print'), # . in brainfuck
+    ('READ', r'read'), # , in brainfuck
+    ('DO',r'do'),
+    ('ADD',r'add'),
+    ('SUB',r'sub'),
+    ('LOOP', r'loop'), # [] in brainfuck
+    ('DEF', r'def'),
     ('NUMBER', r'\d+'),
     ('PARENTESE_A', r'\('),
     ('PARENTESE_F', r'\)'),
+    ('NAME', r'[-a-zA-Z]+'),
     ('COMMENT', r';.*'),
     ('NEWLINE', r'\n'),
     ('SPACE', r'\s+')
 ])
 
 
-tokens = ['PARENTESE_F','PARENTESE_A','NUMBER','NAME']
-cellptr = 0
-cells = [0]
-codeptr = 0
+tokens = ['RIGHT', 'LEFT', 'INC', 'DEC', 'SUB', 'ADD', 'NUMBER','PRINT', 'LOOP',
+            'READ','DEF','PARENTESE_F','PARENTESE_A','DO','NAME']
 
-name = lambda name: ('name', name)
-number = lambda number: ('number', int(number))
+operator = lambda type_op: (type_op)
 op = lambda op: (op)
+opr = lambda op, num: (op, num)
+
 parser = ox.make_parser([
 	('program : PARENTESE_A expr PARENTESE_F', lambda x,y,z: y),
     ('program : PARENTESE_A PARENTESE_F', lambda x,y: '()'),
 	('expr : operator expr', lambda x,y: (x,) + y),
 	('expr : operator', lambda x: (x,)),
 	('operator : program', op),
-    ('operator : NAME', name),
-    ('operator : NUMBER', number),
+    ('operator : LOOP', operator),
+    ('operator : DO', operator),
+    ('operator : RIGHT', operator),
+    ('operator : LEFT', operator),
+    ('operator : READ', operator),
+    ('operator : INC', operator),
+    ('operator : DEC', operator),
+    ('operator : DEF', operator),
+    ('operator : PRINT', operator),
+    ('operator : ADD', operator),
+    ('operator : SUB', operator),
+    ('operator : NAME', operator),
+    ('operator : NUMBER', int),
 ], tokens)
 
 
-def right():
-    global cellptr
-    cellptr += 1
-    if cellptr == len(cells):
-        cells.append(0)
+def dec_inc(tree,vector_aux,index,position):
+    if (tree[position] == 'inc'):
+        vector_aux[index] += 1
+    elif (tree[position] == 'dec'):
+        vector_aux[index] -= 1
 
-def left():
-    global cellptr
-    if cellptr <= 0:
-        cellptr = 0
-    else:
-        cellptr -= 1
+    return vector_aux[index]
 
-def inc():
-    global cellptr
-    if cells[cellptr] < 255:
-        cells[cellptr] = cells[cellptr] + 1
-    else:
-        cells[cellptr] = 0
+def run_right_left(tree, vector_aux, index,position):
+        if tree[position] == 'right':
+            index += 1
+            if len(vector_aux) - 1 < index:
+                vector_aux.append(0)
+        elif tree[position] == 'left':
+            index -= 1
+            if index < 0:
+                vector_aux.append(0)
+        return index, vector_aux
 
-def dec():
-    global cellptr
-    if cells[cellptr] > 0:
-        cells[cellptr] = cells[cellptr] - 1
-    else:
-        cells[cellptr] = 255
+def interpretador(tree,vector_aux,count):
+    i = 0
+    loop_active = False
 
-def sub(number):
-    while number != 0:
-        dec()
-        number -= 1
+    while i < len(tree):
+        if isinstance(tree[i], tuple):
+            vector_aux, count = interpretador(tree[i], vector_aux, count)
+        elif (tree[i] == 'inc' or tree[i] == 'dec'):
+            vector_aux[count] = dec_inc(tree, vector_aux, count,i)
+        elif tree[i] == 'right' or tree[i] == 'left':
+            count, source = run_right_left(tree, vector_aux, count,i)
+        elif tree[i] == 'add':
+            i += 1
+            vector_aux[count] += tree[i]
+        elif tree[i] == 'sub':
+            i += 1
+            vector_aux[count] -= tree[i]
+        elif tree[i] == 'print':
+            print(chr(vector_aux[count]))
+        elif tree[i] == 'read':
+            vector_aux[count] = input('input: ')
+        elif tree[i] == 'loop':
+            vector_aux, count = interpretador(tree[i], vector_aux, count)
 
-def loop(code):
-  temp_bracestack, bracemap = [], {}
+        i += 1
 
-  for position, command in enumerate(code):
-    if command == "[": temp_bracestack.append(position)
-    if command == "]":
-      start = temp_bracestack.pop()
-      bracemap[start] = position
-      bracemap[position] = start
-  return bracemap
-
-
-def add(number):
-    while number != 0:
-        inc()
-        number -= 1
-
-def _print():
-    sys.stdout.write(chr(cells[cellptr]))
-
-def read():
-    global cellptr, cells
-    cells[cellptr] = ord(stdin.read(1))
-
-OP_TO_FUNC = {
-    'right': right(),    # > in brainfuck
-    'left': left(),     # < in brainfuck
-    'print': _print(),     # . in brainfuck
-    'read': read(),     # , in brainfuck
-    'loop': loop(),         # [] in brainfuck
-    'inc': inc(),         # + in brainfuck
-    'dec': dec(),         # - in brainfuck
-}
-
-_OP_TO_FUNC = {
-    'add': add(number),  # > in brainfuck x times
-    'sub': sub(number),     # < in brainfuck x times
-}
-
-def eval(ast):
-    head, *tail = ast
-    if isinstance(head, int):
-        return tail[0]
-    elif head in OP_TO_FUNC:
-        OP_TO_FUNC[head]()
-        return
-    elif head in _OP_TO_FUNC:
-        func = _OP_TO_FUNC[head]
-        x = map(eval, tail)
-        return func(x)
-    else:
-        raise ValueError('operador invalido: %s' % head)
+    return vector_aux, count
 
 
 @click.command()
 @click.argument('source', type=click.File('r'))
 def make_tree(source):
+    vector_aux = [0]
+    count = 0
     program = source.read()
     print('program: ', program)
     tokens = lexer(program)
-
-    # removing space and comment tokens before passing list to parser
     parser_tokens = [token for token in tokens if token.type != 'COMMENT' and token.type != 'SPACE']
-
     tree = parser(parser_tokens)
-    return tree
+    interpretador(tree, vector_aux, count)
+    #print(tree)
 
 if __name__ == '__main__':
-    tree = make_tree()
-    print('\n\ntree:', tree) # Abstract syntax tree
-    #eval(tree)
+    make_tree()
