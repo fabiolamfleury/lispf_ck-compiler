@@ -1,4 +1,3 @@
-import sys
 from sys import stdin
 
 class Interpreter():
@@ -65,12 +64,11 @@ class Interpreter():
             increment = increment - 1
 
     def _print(self):
-        sys.stdout.write(chr(self.cells[self.cellptr]))
+        print(chr(self.cells[self.cellptr]))
 
     def read(self):
-        var = input('Input: ')
-        print(int(var) % 256)
-        self.cells[self.cellptr] = int(var) % 256
+        self.cells[self.cellptr] = ord(stdin.read(1))
+        ord(stdin.read(1))
 
     def do(self, code):
         for operation in code:
@@ -85,10 +83,18 @@ class Interpreter():
                 self.eval(operation)
 
     def do_before(self,code):
-        return
+        before_command, command_list = code
+        new_code = ['do']
+        for command in command_list:
+            new_code.extend([before_command, command])
+        self.eval(new_code)
 
     def do_after(self,code):
-        return
+        after_command, command_list = code
+        new_code = ['do']
+        for command in command_list:
+            new_code.extend([command, after_command])
+        self.eval(new_code)
 
     def eval(self, ast):
         head, *tail = ast
