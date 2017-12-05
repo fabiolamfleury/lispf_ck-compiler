@@ -31,9 +31,9 @@ parser = ox.make_parser([
 ], tokens)
 
 
-
 @click.command()
 @click.argument('source', type=click.File('r'))
+#@click.option('-o', nargs=1, type=click.File('w'))
 def make_tree(source):
     program = source.read()
     print('program: ', program)
@@ -44,9 +44,10 @@ def make_tree(source):
 
     tree = parser(parser_tokens)
     print('Tree: ', tree)
-    print('\n\n\nInterpreter: ')
+    print('\n\n\nTraducao para brainfuck: ')
     interpreter = Interpreter()
     interpreter.eval(tree)
+    print(interpreter.result())
     print('\n\n')
     return tree
 
