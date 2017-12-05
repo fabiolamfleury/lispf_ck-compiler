@@ -33,8 +33,8 @@ parser = ox.make_parser([
 
 @click.command()
 @click.argument('source', type=click.File('r'))
-#@click.option('-o', nargs=1, type=click.File('w'))
-def make_tree(source):
+@click.option('-o', nargs=1, type=click.File('w'))
+def make_tree(source, o):
     program = source.read()
     print('program: ', program)
     tokens = lexer(program)
@@ -43,16 +43,14 @@ def make_tree(source):
     parser_tokens = [token for token in tokens if token.type != 'COMMENT' and token.type != 'SPACE']
 
     tree = parser(parser_tokens)
-    print('Tree: ', tree)
-    print('\n\n\nTraducao para brainfuck: ')
     interpreter = Interpreter()
     interpreter.eval(tree)
-    print(interpreter.result())
-    print('\n\n')
-    return tree
+    brainf = interpreter.result()
+    print('Brainfuck translation: \n', brainf)
+    print('\n')
+    print('Program ', o.name, 'saved')
+    o.write(brainf)
+    o.flush()
 
 if __name__ == '__main__':
     tree = make_tree()
-    print('\n\ntree:', tree) # Abstract syntax tree
-
-    #eval(tree)

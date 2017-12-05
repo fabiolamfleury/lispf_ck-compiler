@@ -1,9 +1,9 @@
-# lispf_ck-interpreter
- repository for lisp_f_ck interpreter activity, continued work from https://github.com/josutk/Lisp_f_ck
+# lispf_ck-compiler
+ repository for lisp_f_ck compiler activity, continued work from https://github.com/fabiolamfleury/lispf_ck-interpreter
 
- This project runs lispfuck, to use it simple select your file.lf and run command:
+ This project converts lispfuck code to brainfuck, to use it select your file.lf and name your .bf file according to this command:
 
- $ python3 lispf_ck.py examples/add_ask.lf
+ $ python3 lispf_ck.py examples/add_ask.lf -o file_name.bf
 
  Contributors:
 
