@@ -20,7 +20,12 @@ class Interpreter():
             'loop': self.loop,         # [] in brainfuck
             'do-before': self.do_before,
             'do-after': self.do_after,
+            'def': self.define,
         }
+        self.functions = {}
+
+    def define(self, code):
+        self.functions[code[0]] = code[2]
 
     def result(self):
         return self.string
@@ -47,9 +52,11 @@ class Interpreter():
             if isinstance(operation, str):
                 if operation in self.OP_TO_FUNC:
                     self.string += self.OP_TO_FUNC[operation]
-                else:
+                elif operation in self._OP_TO_FUNC:
                     func = self._OP_TO_FUNC[operation]
                     func()
+                elif operation in self.functions:
+                    self.eval(self.functions[operation])
             else:
                 self.eval(operation)
 
@@ -78,5 +85,7 @@ class Interpreter():
             return func(tail)
         elif isinstance(head, int):
             return tail[0]
+        elif head in self.functions:
+            self.eval(self.functions[head])
         else:
             raise ValueError('operador invalido: %s' % head)

@@ -1,0 +1,1 @@
+(do (def inc-two () (add 2)) print inc-two inc-two inc-two)

@@ -43,12 +43,13 @@ def make_tree(source, o):
     parser_tokens = [token for token in tokens if token.type != 'COMMENT' and token.type != 'SPACE']
 
     tree = parser(parser_tokens)
+    print(tree)
     interpreter = Interpreter()
     interpreter.eval(tree)
     brainf = interpreter.result()
     print('Brainfuck translation: \n', brainf)
     print('\n')
-    print('Program ', o.name, 'saved')
+    print('Program', o.name, 'saved')
     o.write(brainf)
     o.flush()
 
