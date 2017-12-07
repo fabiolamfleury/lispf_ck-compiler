@@ -23,9 +23,31 @@ class Interpreter():
             'def': self.define,
         }
         self.functions = {}
+        self.functions_with_args = {}
 
     def define(self, code):
-        self.functions[code[0]] = code[2]
+        if code[1] == '()':
+            self.functions[code[0]] = code[2]
+        else:
+            self.functions_with_args[code[0]] = [code[2], code[1]]
+
+    def func_with_args(self, head, tail):
+        """
+            head[0] # code
+            head[1] # args tuple
+            tail # passed args
+        """
+        count = 0
+        for element in head[1]:
+            aux_lst = list(head[0])
+            for index, item in enumerate(aux_lst):
+                if isinstance(item, str) and element is item:
+                    aux_lst[index] = tail[count]
+                    head[0] = tuple(aux_lst)
+                else:
+                    pass
+        count = count + 1
+        self.eval(head[0])
 
     def result(self):
         return self.string
@@ -87,5 +109,7 @@ class Interpreter():
             return tail[0]
         elif head in self.functions:
             self.eval(self.functions[head])
+        elif head in self.functions_with_args:
+            return self.func_with_args(self.functions_with_args[head], tail)
         else:
             raise ValueError('operador invalido: %s' % head)
