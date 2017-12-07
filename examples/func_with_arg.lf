@@ -1,1 +1,1 @@
-(do (def inc-two (a) (add a)) print (inc-two 2))
+(do (def inc-two (a b) (print (add a) (sub b))) print (inc-two 2 3) (inc-two 2 3))

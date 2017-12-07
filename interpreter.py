@@ -38,16 +38,22 @@ class Interpreter():
             tail # passed args
         """
         count = 0
+        print(type(head[0]))
         for element in head[1]:
             aux_lst = list(head[0])
             for index, item in enumerate(aux_lst):
                 if isinstance(item, str) and element is item:
                     aux_lst[index] = tail[count]
                     head[0] = tuple(aux_lst)
-                else:
-                    pass
-        count = count + 1
-        self.eval(head[0])
+                elif not isinstance(item, str) and not isinstance(item, int):
+                    print('\n',item)
+                    new_head = [item, head[1]]
+                    aux_lst[index] = self.func_with_args(new_head, tail)
+                    print('\n\n\nEOQ', aux_lst[index], aux_lst)
+            count = count + 1
+            head[0] = tuple(aux_lst)
+        print(head ,'head1',head[1], 'tail',tail, 'head 0',head[0])
+        return head[0]
 
     def result(self):
         return self.string
@@ -110,6 +116,8 @@ class Interpreter():
         elif head in self.functions:
             self.eval(self.functions[head])
         elif head in self.functions_with_args:
-            return self.func_with_args(self.functions_with_args[head], tail)
+            func_args = self.func_with_args(self.functions_with_args[head], tail)
+            print('\n\n\fun_args', func_args)
+            return self.do(func_args)
         else:
             raise ValueError('operador invalido: %s' % head)
